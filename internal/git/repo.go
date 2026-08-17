@@ -96,3 +96,16 @@ func HasAnyCommit() bool {
 	_, err := run("rev-parse", "HEAD")
 	return err == nil
 }
+
+func CommitsSince(commitSHA string) (int, error) {
+	if commitSHA == "" || commitSHA == "(no commits yet)" {
+		return 0, nil
+	}
+	out, err := run("rev-list", commitSHA+"..HEAD", "--count")
+	if err != nil {
+		return 0, nil
+	}
+	var count int
+	fmt.Sscanf(out, "%d", &count)
+	return count, nil
+}

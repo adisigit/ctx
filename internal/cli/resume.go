@@ -4,6 +4,7 @@ import (
 	"ctx/internal/git"
 	"ctx/internal/store"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -35,15 +36,41 @@ func runResume(smd *cobra.Command, args []string) error {
 		fmt.Printf("no context found for repo %s", repo)
 		return nil
 	}
-	fmt.Println("Session:")
-	fmt.Printf("  %s\n", last.Session)
-	fmt.Println("Git state:")
-	fmt.Printf("  commit = %s\n", last.CommitSHA)
+
+	commitsSince, _ := git.CommitsSince(last.CommitSHA)
+
+	divider := strings.Repeat("─", 32)
+
+	fmt.Println(repo)
+	fmt.Println(divider)
+	fmt.Printf("Welcome back.\n\n")
+
+	fmt.Println("Last session:")
+	fmt.Printf("  %s\n\n", last.Session)
+
+	fmt.Println("Since then:")
+	fmt.Printf("  %d commit(s)\n\n", commitsSince)
+
 	fmt.Println("Completed:")
-	fmt.Printf("  %s\n", last.Completed)
-	fmt.Println("Remaining:")
-	fmt.Printf("  %s\n", last.Remaining)
-	fmt.Println("Blocker:")
-	fmt.Printf("  %s\n", last.Blocker)
+	fmt.Printf("  %s\n\n", last.Completed)
+
+	fmt.Println("Unfinished work:")
+	fmt.Printf("  ⚠ %s\n\n", last.Remaining)
+
+	if last.Blocker != "" && last.Blocker != "None" {
+		fmt.Println("Blocker:")
+		fmt.Printf("  🚫 %s\n\n", last.Blocker)
+	}
+
+	fmt.Println("Files touched:")
+	if len(last.Files) == 0 {
+		fmt.Println("  (none recorded)")
+	} else {
+		for _, f := range last.Files {
+			fmt.Printf("  • %s\n", f)
+		}
+	}
+
+	fmt.Printf("\nGit state: commit %s, branch %s\n", last.CommitSHA, last.Branch)
 	return nil
 }
