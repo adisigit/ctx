@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -26,7 +27,14 @@ type createSessionResp struct {
 }
 
 func (c *SessionClient) CreateSession(publicKeyB64 string) (sessionID, loginURL string, err error) {
-	body, _ := json.Marshal(map[string]string{"public_key": publicKeyB64})
+	deviceName, err := os.Hostname()
+	if err != nil {
+		return "", "", fmt.Errorf("failed to get device name: %w", err)
+	}
+	body, _ := json.Marshal(map[string]string{
+		"public_key":  publicKeyB64,
+		"device_name": deviceName,
+	})
 	resp, err := c.http.Post(c.apiBase+"/auth/cli/session", "application/json", bytes.NewReader(body))
 	if err != nil {
 		return
